@@ -12,3 +12,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Authenticate Salesforce
+        run: |
+          echo "${{ secrets.SF_AUTH_URL }}" | sf org login sfdx-url \
+            --sfdx-url-stdin \
+            --alias CI-Org
+
+      - name: Run Salesforce Code Analyzer
+        uses: forcedotcom/run-code-analyzer@v2
+        with:
+          run-arguments: >
+            --workspace force-app
+            --severity-threshold 3
