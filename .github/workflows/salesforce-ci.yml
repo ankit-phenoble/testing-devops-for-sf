@@ -31,4 +31,4 @@ jobs:
 
       - name: Run Apex Tests
         run: |
-          sf apex run test --test-level RunLocalTests --target-org CI-Org --wait 30
+          sf apex run test --test-level RunLocalTests --wait 30
