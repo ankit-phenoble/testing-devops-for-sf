@@ -20,9 +20,7 @@ jobs:
 
       - name: Authenticate Salesforce
         run: |
-          echo "${{ secrets.SF_AUTH_URL }}" | sf org login sfdx-url \
-            --sfdx-url-stdin \
-            --alias CI-Org
+          echo "${{ secrets.SF_AUTH_URL }}" | sf org login sfdx-url --sfdx-url-stdin --alias CI-Org
 
       - name: Run Salesforce Code Analyzer
         uses: forcedotcom/run-code-analyzer@v2
