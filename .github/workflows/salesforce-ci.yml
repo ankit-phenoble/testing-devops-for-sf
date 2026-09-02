@@ -28,7 +28,7 @@ jobs:
           run-arguments: >
             --workspace force-app
             --severity-threshold 3
-            
+
       - name: Run Apex Tests
         run: |
-          sf apex run test --test-level RunLocalTests --wait 30
+          sf apex run test --test-level RunLocalTests --target-org CI-Org --wait 30
