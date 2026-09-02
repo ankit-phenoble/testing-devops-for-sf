@@ -1,0 +1,14 @@
+name: Salesforce CI
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  salesforce-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
