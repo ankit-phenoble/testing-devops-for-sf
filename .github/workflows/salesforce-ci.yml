@@ -69,13 +69,16 @@ jobs:
       - name: Deploy pushed code to CI Org
         id: deploy
         run: |
+          set +e
           sf project deploy start \
             --source-dir force-app \
             --target-org ci-org \
             --wait 30 \
             --ignore-conflicts \
             --json > deploy-result.json
+          DEPLOY_EXIT=$?
           cat deploy-result.json
+          exit $DEPLOY_EXIT
 
       - name: Upload Deploy results
         if: always()
