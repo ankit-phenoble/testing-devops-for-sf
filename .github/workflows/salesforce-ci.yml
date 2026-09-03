@@ -37,7 +37,7 @@ jobs:
 
       - name: Authenticate Salesforce
         run: |
-          echo "${{ secrets.SF_AUTH_URL }}" | sf org login sfdx-url --sfdx-url-stdin --alias ci-org --set-default
+          echo "${{ secrets.SF_AUTH_URL }}" | sf org login sfdx-url --alias ci-org --set-default --sfdx-url-stdin
           sf org display --target-org ci-org
 
       - name: Run Salesforce Code Analyzer (Apex + LWC/Aura)
