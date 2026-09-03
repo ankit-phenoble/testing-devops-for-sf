@@ -1,4 +1,4 @@
-public with sharing class TestingDevopsCenter {
+public with sharing class testingDevopsCenter {
 
     public static String getStatus() {
         return 'CI Test Successful';
