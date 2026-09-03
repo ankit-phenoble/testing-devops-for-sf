@@ -86,19 +86,23 @@ jobs:
           path: test-results
           retention-days: 14
 
-      - name: Enforce minimum org-wide coverage (75%)
+      - name: Enforce test pass + minimum coverage (75%)
         run: |
-          COVERAGE=$(cat test-results/test-result-*.json | jq '.summary.orgWideCoverage' | tr -d '%')
+          RESULT_FILE=$(ls test-results/test-result-*.json | grep -v codecoverage | head -1)
+          echo "Using result file: $RESULT_FILE"
+
+          FAILURES=$(jq '.summary.failing' "$RESULT_FILE")
+          COVERAGE=$(jq '.summary.orgWideCoverage' "$RESULT_FILE" | tr -d '%"')
+
+          echo "Failing tests: $FAILURES"
           echo "Org-wide coverage: $COVERAGE%"
-          if (( $(echo "$COVERAGE < 75" | bc -l) )); then
-            echo "::error::Coverage $COVERAGE% is below the required 75% threshold"
+
+          if [ "$FAILURES" != "0" ]; then
+            echo "::error::$FAILURES test(s) failed"
             exit 1
           fi
 
-      - name: Fail if any test failed
-        run: |
-          FAILURES=$(cat test-results/test-result-*.json | jq '.summary.failing')
-          if [ "$FAILURES" != "0" ]; then
-            echo "::error::$FAILURES test(s) failed"
+          if (( $(echo "$COVERAGE < 75" | bc -l) )); then
+            echo "::error::Coverage $COVERAGE% is below the required 75% threshold"
             exit 1
           fi
