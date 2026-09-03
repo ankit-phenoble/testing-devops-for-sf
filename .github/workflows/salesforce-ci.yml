@@ -20,8 +20,7 @@ jobs:
 
       - name: Authenticate Salesforce
         run: |
-          echo "${{ secrets.SF_AUTH_URL }}" | sf org login sfdx-url --sfdx-url-stdin --alias=CI-Org --set-default
-
+          echo "${{ secrets.SF_AUTH_URL }}" | sf org login sfdx-url --sfdx-url-stdin
       - name: Run Salesforce Code Analyzer
         uses: forcedotcom/run-code-analyzer@v2
         with:
@@ -31,4 +30,4 @@ jobs:
 
       - name: Run Apex Tests
         run: |
-          sf apex run test --test-level RunLocalTests --target-org CI-Org --wait 30
+          sf apex run test --test-level RunLocalTests --wait 30
