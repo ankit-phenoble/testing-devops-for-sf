@@ -1,5 +1,6 @@
-public with sharing class testingDevopsCenter {
-    public testingDevopsCenter() {
-        public static void main('DEVOPS !!!!!!!');
+public with sharing class TestingDevopsCenter {
+
+    public static String getStatus() {
+        return 'CI Test Successful';
     }
 }
