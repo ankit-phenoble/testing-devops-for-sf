@@ -2,6 +2,8 @@ name: Salesforce CI
 
 on:
   push:
+  pull_request:
+  
     branches:
       - main
       - develop
@@ -108,3 +110,4 @@ jobs:
             echo "::error::Coverage $COVERAGE% is below the required 75% threshold"
             exit 1
           fi
+          
