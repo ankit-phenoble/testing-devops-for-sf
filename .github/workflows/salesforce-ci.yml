@@ -1,0 +1,110 @@
+name: Salesforce CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+
+concurrency:
+  group: sf-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  salesforce-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        run: |
+          if [ -z "${{ secrets.SF_AUTH_URL }}" ]; then
+            echo "::error::SF_AUTH_URL secret is not set"
+            exit 1
+          fi
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install --global @salesforce/cli
+          sf --version
+
+      - name: Authenticate Salesforce
+        run: |
+          echo "${{ secrets.SF_AUTH_URL }}" | sf org login sfdx-url --alias ci-org --set-default --sfdx-url-stdin
+          sf org display --target-org ci-org
+
+      - name: Run Salesforce Code Analyzer (Apex + LWC/Aura)
+        id: code-analyzer
+        uses: forcedotcom/run-code-analyzer@v2
+        with:
+          run-arguments: >
+            --workspace force-app
+            --rule-selector pmd:Apex
+            --rule-selector eslint:lwc
+            --severity-threshold 3
+            --output-file analyzer-results.json
+        continue-on-error: true
+
+      - name: Upload Code Analyzer results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-analyzer-results
+          path: analyzer-results.json
+          retention-days: 14
+
+      - name: Fail build if Code Analyzer found violations
+        if: steps.code-analyzer.outcome == 'failure'
+        run: |
+          echo "::error::Code Analyzer found violations above severity threshold"
+          exit 1
+
+      - name: Run Apex Tests with Coverage
+        id: apex-tests
+        run: |
+          sf apex run test \
+            --target-org ci-org \
+            --test-level RunLocalTests \
+            --code-coverage \
+            --result-format json \
+            --wait 30 \
+            --output-dir test-results > test-run-output.json
+          cat test-run-output.json
+
+      - name: Upload Test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-test-results
+          path: test-results
+          retention-days: 14
+
+      - name: Enforce test pass + minimum coverage (75%)
+        run: |
+          RESULT_FILE=$(ls test-results/test-result-*.json | grep -v codecoverage | head -1)
+          echo "Using result file: $RESULT_FILE"
+
+          FAILURES=$(jq '.summary.failing' "$RESULT_FILE")
+          COVERAGE=$(jq '.summary.orgWideCoverage' "$RESULT_FILE" | tr -d '%"')
+
+          echo "Failing tests: $FAILURES"
+          echo "Org-wide coverage: $COVERAGE%"
+
+          if [ "$FAILURES" != "0" ]; then
+            echo "::error::$FAILURES test(s) failed"
+            exit 1
+          fi
+
+          if (( $(echo "$COVERAGE < 75" | bc -l) )); then
+            echo "::error::Coverage $COVERAGE% is below the required 75% threshold"
+            exit 1
+          fi
+          
