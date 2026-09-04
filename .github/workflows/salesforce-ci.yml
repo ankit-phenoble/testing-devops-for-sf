@@ -2,17 +2,9 @@ name: Salesforce CI
 
 on:
   push:
-    branches:
-      - main
-      - develop
-      - 'feature/**'
   pull_request:
     types: [opened, synchronize, reopened]
-    branches:
-      - main
-      - develop
-      - 'feature/**'
-
+    
 concurrency:
   group: sf-ci-${{ github.ref }}
   cancel-in-progress: true
